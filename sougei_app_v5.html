@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>送迎運行管理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.app{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)}
+.hdr{background:#185FA5;padding:12px 1rem 10px}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hdr-title{font-size:15px;font-weight:500;color:#fff;flex:1}
+.hdr-badge{font-size:12px;background:#E6F1FB;color:#0C447C;padding:2px 9px;border-radius:20px;font-weight:500;white-space:nowrap}
+.hdr-sub{font-size:12px;color:#85B7EB;margin-top:3px}
+.sync-bar{background:#0C447C;padding:6px 1rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sync-status{font-size:11px;color:#85B7EB;display:flex;align-items:center;gap:5px}
+.sync-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:none;cursor:pointer;font-weight:500;white-space:nowrap}
+.sync-push{background:#1D9E75;color:#fff}
+.sync-pull{background:#EF9F27;color:#412402}
+.tabs{display:flex;background:#0C447C;padding:0 2px;border-top:0.5px solid rgba(255,255,255,.15)}
+.tab{font-size:11px;padding:8px 6px;cursor:pointer;color:#85B7EB;border-bottom:2px solid transparent;white-space:nowrap;flex:1;text-align:center}
+.tab.active{color:#fff;border-bottom-color:#fff;font-weight:500}
+.pane{display:none}.pane.active{display:block}
+.date-banner{background:#185FA5;padding:10px 1rem;display:flex;align-items:center;gap:8px;border-bottom:0.5px solid rgba(255,255,255,.15)}
+.date-nav-btn{background:rgba(255,255,255,.15);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.date-nav-btn:active{background:rgba(255,255,255,.3)}
+.date-center{flex:1;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.date-main{font-size:16px;font-weight:500;color:#fff;line-height:1.2}
+.date-sub{font-size:11px;color:#85B7EB;margin-top:1px}
+.date-input-wrap{display:none;padding:8px 1rem;background:#0C447C;border-bottom:0.5px solid rgba(255,255,255,.1)}
+.date-input-wrap.open{display:flex;align-items:center;gap:8px}
+.date-inp{flex:1;font-size:14px;padding:7px 10px;border:0.5px solid rgba(255,255,255,.3);border-radius:var(--border-radius-md);background:rgba(255,255,255,.1);color:#fff}
+.date-inp::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.7}
+.date-inp:focus{outline:none;border-color:#fff}
+.date-confirm-btn{padding:7px 14px;border-radius:var(--border-radius-md);border:none;background:#1D9E75;color:#fff;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.prog-wrap{padding:10px 1rem;background:var(--color-background-secondary)}
+.prog-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-secondary);margin-bottom:5px}
+.prog-bar{height:8px;background:var(--color-border-tertiary);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;background:#1D9E75;border-radius:4px;transition:width .4s}
+.ride-card{margin:0 1rem 8px;border-radius:var(--border-radius-lg);padding:11px 12px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.ride-card.ko-card{border-left:3px solid #378ADD;background:#f5f9fe}
+.ride-card.hara-card{border-left:3px solid #7F77DD;background:#f6f5fe}
+.ride-card.checked{opacity:.6}
+.ride-card.checked.ko-card,.ride-card.checked.hara-card{background:#EAF3DE;border-left-color:#1D9E75}
+.ride-top{display:flex;align-items:center;gap:8px}
+.time-pill{font-size:13px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.tp-ko{background:#E6F1FB;color:#0C447C}
+.tp-hara{background:#EEEDFE;color:#3C3489}
+.name-txt{font-size:14px;font-weight:500;flex:1}
+.card-meta{font-size:11px;color:var(--color-text-secondary);margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.school-tag{font-size:11px;background:#EAF3DE;color:#3B6D11;padding:1px 7px;border-radius:20px;font-weight:500}
+.grade-tag{font-size:11px;background:#FAEEDA;color:#633806;padding:1px 7px;border-radius:20px}
+.note-chip{font-size:12px;background:#EEEDFE;color:#3C3489;border-radius:4px;padding:2px 8px;margin-top:5px;display:inline-block}
+.check-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:0.5px solid var(--color-border-tertiary)}
+.chk-lbl{font-size:11px;color:var(--color-text-secondary)}
+.chk-btn{font-size:12px;padding:4px 12px;border-radius:20px;border:none;cursor:pointer;font-weight:500;touch-action:manipulation}
+.chk-no{background:#E6F1FB;color:#0C447C}
+.chk-yes{background:#1D9E75;color:#fff}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--color-text-tertiary);padding:3px 5px;border-radius:4px;font-size:15px;line-height:1;flex-shrink:0;touch-action:manipulation}
+.del-btn:active{color:#E24B4A}
+.fw{padding:10px 1rem 1rem}
+.f-sec{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin:12px 0 6px;display:flex;align-items:center;gap:5px}
+.f-sec i{font-size:14px}
+/* 追加・編集ページ：現在編集中の日付バナー */
+.edit-date-bar{background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:var(--border-radius-md);padding:9px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.edit-date-label{font-size:12px;color:#3B6D11;font-weight:500;flex:1}
+.edit-date-val{font-size:13px;font-weight:600;color:#27500A}
+.chip-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.child-chip{display:inline-flex;align-items:center;gap:0;border-radius:20px;border:0.5px solid #B5D4F4;background:#E6F1FB;overflow:hidden;min-height:36px}
+.child-chip.ac{background:#185FA5;border-color:#185FA5}
+.child-chip-body{display:flex;flex-direction:column;justify-content:center;padding:4px 8px 4px 10px;cursor:pointer;flex:1;min-width:0;touch-action:manipulation}
+.child-chip-name{font-size:13px;font-weight:500;color:#0C447C;line-height:1.2;white-space:nowrap}
+.child-chip.ac .child-chip-name{color:#fff}
+.child-chip-school{font-size:10px;color:#378ADD;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.child-chip.ac .child-chip-school{color:rgba(255,255,255,.75)}
+.child-chip-del{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;background:none;border:none;border-left:0.5px solid #B5D4F4;cursor:pointer;color:#378ADD;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.child-chip.ac .child-chip-del{border-left-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+.child-chip-del:active,.child-chip-del:hover{background:#FCEBEB;color:#E24B4A}
+.child-chip.ac .child-chip-del:active{background:rgba(255,255,255,.2);color:#fff}
+.fi{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);margin-bottom:6px}
+.fi:focus{outline:none;border-color:#378ADD}
+.fta{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);resize:none;height:52px}
+.row-inp{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.row-inp input{flex:1;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary)}
+.ab{padding:7px 12px;border-radius:var(--border-radius-md);border:none;font-size:13px;cursor:pointer;color:#fff;white-space:nowrap;font-weight:500}
+.ab-blue{background:#185FA5}.ab-purple{background:#534AB7}
+.main-btn{width:100%;padding:10px;font-size:14px;font-weight:500;border-radius:var(--border-radius-md);border:none;background:#185FA5;color:#fff;cursor:pointer;margin-top:8px}
+.main-btn:active{background:#0C447C}
+.save-settings-btn{width:100%;padding:11px;font-size:14px;font-weight:500;border-radius:var(--border-radius-md);border:none;background:#1D9E75;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px}
+.save-settings-btn:active{background:#0F6E56}
+.save-btn{width:100%;padding:8px;font-size:13px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer;margin-top:4px}
+.div{height:0.5px;background:var(--color-border-tertiary);margin:12px 0}
+.sw{position:relative;margin-bottom:8px}
+.sw i{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--color-text-tertiary);pointer-events:none}
+.sw input{width:100%;font-size:13px;padding:7px 10px 7px 32px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary)}
+.edit-row{display:flex;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);gap:8px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px 1rem}
+.sc{border-radius:var(--border-radius-md);padding:12px}
+.sc-lbl{font-size:11px;font-weight:500;margin-bottom:3px;letter-spacing:.04em}
+.sc-val{font-size:24px;font-weight:500}
+.sc-green{background:#EAF3DE}.sc-green .sc-lbl{color:#3B6D11}.sc-green .sc-val{color:#27500A}
+.sc-amber{background:#FAEEDA}.sc-amber .sc-lbl{color:#854F0B}.sc-amber .sc-val{color:#633806}
+.share-box{margin:12px 1rem;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:14px}
+.share-title{font-size:13px;font-weight:500;margin-bottom:10px;color:var(--color-text-primary);display:flex;align-items:center;gap:6px}
+.code-box{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:20px;font-weight:500;letter-spacing:.2em;text-align:center;color:#185FA5;margin-bottom:8px}
+.share-note{font-size:11px;color:var(--color-text-tertiary);line-height:1.6;margin-bottom:10px}
+.toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#27500A;color:#EAF3DE;font-size:12px;padding:6px 14px;border-radius:20px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:99}
+.toast.show{opacity:1}
+.sel-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;background:#E6F1FB;color:#0C447C;border:0.5px solid #B5D4F4;border-radius:20px;padding:4px 10px;margin:2px 3px}
+.sel-badge button{background:none;border:none;cursor:pointer;color:#0C447C;padding:0;font-size:12px;line-height:1;opacity:.6}
+#selected-children-area{margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px}
+.share-big-btn{width:100%;padding:13px;font-size:15px;font-weight:600;border-radius:var(--border-radius-md);border:none;background:#1D9E75;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.share-big-btn:active{background:#157A5A}
+.drv-section{margin-bottom:4px}
+.drv-section-hdr{display:flex;align-items:center;gap:7px;padding:8px 1rem 4px;font-size:12px;font-weight:600;letter-spacing:.05em;color:#3C3489;border-bottom:1.5px solid #EEEDFE;margin-bottom:2px}
+.drv-section-hdr.unassigned{color:var(--color-text-tertiary);border-bottom-color:var(--color-border-tertiary)}
+.drv-badge{font-size:11px;padding:2px 8px;border-radius:20px;background:#EEEDFE;color:#3C3489;font-weight:600}
+.drv-badge.unassigned{background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+.ride-drv-sel{font-size:11px;padding:3px 6px;border-radius:12px;border:0.5px solid #AFA9EC;background:#EEEDFE;color:#3C3489;cursor:pointer;max-width:80px}
+.ride-drv-sel.unset{background:var(--color-background-secondary);color:var(--color-text-tertiary);border-color:var(--color-border-secondary)}
+.card-drv-sel{font-size:11px;padding:2px 6px;border-radius:12px;border:0.5px solid #AFA9EC;background:#EEEDFE;color:#3C3489;cursor:pointer}
+.card-drv-sel.unset{background:var(--color-background-secondary);color:var(--color-text-tertiary);border-color:var(--color-border-secondary)}
+.drv-mgr-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.drv-mgr-name{flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.drv-mgr-del{background:#FCEBEB;border:0.5px solid #F09595;border-radius:var(--border-radius-md);padding:3px 8px;font-size:12px;color:#791F1F;cursor:pointer}
+.saved-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;background:#EAF3DE;color:#3B6D11;border-radius:20px;padding:2px 9px;margin-left:6px;opacity:0;transition:opacity .4s}
+.saved-badge.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app" style="position:relative">
+<div class="toast" id="toast"></div>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="hdr-title"><i class="ti ti-bus" style="margin-right:6px;font-size:16px;vertical-align:-2px"></i>送迎運行管理</div>
+    <span class="hdr-badge" id="date-badge"></span>
+  </div>
+  <div class="hdr-sub" id="sub-txt"></div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-status"><i class="ti ti-cloud" style="font-size:13px"></i><span id="sync-txt">未同期</span></div>
+  <div style="display:flex;gap:6px">
+    <button class="sync-btn sync-pull" onclick="pullShared()"><i class="ti ti-cloud-download" style="font-size:12px;margin-right:3px"></i>受信</button>
+    <button class="sync-btn sync-push" onclick="pushShared()"><i class="ti ti-cloud-upload" style="font-size:12px;margin-right:3px"></i>共有</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('schedule')"><i class="ti ti-calendar"></i><br>予定</div>
+  <div class="tab" onclick="switchTab('add')"><i class="ti ti-edit"></i><br>追加・編集</div>
+  <div class="tab" onclick="switchTab('share')"><i class="ti ti-share"></i><br>共有</div>
+  <div class="tab" onclick="switchTab('summary')"><i class="ti ti-chart-bar"></i><br>まとめ</div>
+</div>
+
+<!-- 予定タブ -->
+<div class="pane active" id="pane-schedule">
+  <div class="date-banner">
+    <button class="date-nav-btn" onclick="shiftDate(-1)"><i class="ti ti-chevron-left" style="font-size:16px"></i></button>
+    <div class="date-center" onclick="toggleDatePicker()">
+      <div class="date-main" id="banner-date">―</div>
+      <div class="date-sub"><i class="ti ti-calendar" style="font-size:10px;margin-right:3px;vertical-align:-1px"></i>タップして変更　<span id="banner-count" style="background:rgba(255,255,255,.2);padding:1px 7px;border-radius:20px">0名</span></div>
+    </div>
+    <button class="date-nav-btn" onclick="shiftDate(1)"><i class="ti ti-chevron-right" style="font-size:16px"></i></button>
+  </div>
+  <div class="date-input-wrap" id="date-picker-panel">
+    <input class="date-inp" type="date" id="banner-date-inp" onchange="applyDateFromPicker()">
+    <button class="date-confirm-btn" onclick="closeDatePicker()"><i class="ti ti-check" style="font-size:13px;margin-right:3px"></i>確定</button>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-labels"><span>チェック進捗</span><span id="prog-txt">0 / 0</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div id="schedule-list"></div>
+</div>
+
+<!-- 追加・編集タブ -->
+<div class="pane" id="pane-add">
+  <div class="fw">
+    <!-- 編集中の日付バナー -->
+    <div class="edit-date-bar">
+      <i class="ti ti-calendar-event" style="font-size:16px;color:#3B6D11;flex-shrink:0"></i>
+      <span class="edit-date-label">編集中の日付</span>
+      <span class="edit-date-val" id="edit-date-display">―</span>
+    </div>
+
+    <div class="f-sec"><i class="ti ti-user" style="color:#185FA5"></i>児童を選択（複数選択可）</div>
+    <div id="selected-children-area"></div>
+    <div class="sw"><i class="ti ti-search"></i><input id="child-search" placeholder="名前・学校で絞り込み..." oninput="filterChildChips()"></div>
+    <div class="chip-grid" id="child-chips"></div>
+    <div class="row-inp">
+      <input id="inp-name" placeholder="名前を直接入力して追加...">
+      <button class="ab ab-blue" onclick="addCustomChild()">追加</button>
+    </div>
+    <div class="div"></div>
+
+    <div class="f-sec"><i class="ti ti-clock" style="color:#854F0B"></i>時刻・特記事項</div>
+    <input class="fi" id="inp-time" type="time" value="14:00">
+    <textarea class="fta" id="inp-note" placeholder="同乗者・特記事項（例：山岸さん同乗）"></textarea>
+    <button class="main-btn" onclick="addRide()"><i class="ti ti-plus" style="margin-right:4px"></i>スケジュールに追加</button>
+    <div class="div" style="margin-top:14px"></div>
+
+    <div class="f-sec"><i class="ti ti-steering-wheel" style="color:#534AB7"></i>担当者リスト</div>
+    <div id="driver-mgr-list"></div>
+    <div class="row-inp" style="margin-top:6px">
+      <input id="inp-driver" placeholder="担当者名を入力..." style="flex:1;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary)">
+      <button class="ab ab-purple" onclick="addDriverInput()"><i class="ti ti-plus" style="font-size:13px;margin-right:3px"></i>追加</button>
+    </div>
+    <div class="div"></div>
+
+    <div class="f-sec"><i class="ti ti-trash" style="color:#A32D2D"></i>この日のスケジュール削除</div>
+    <div id="edit-list"></div>
+    <div class="div"></div>
+
+    <div class="f-sec"><i class="ti ti-notes" style="color:var(--color-text-secondary)"></i>この日の全体メモ</div>
+    <textarea class="fta" id="inp-global-note" placeholder="全体への連絡・天気など..."></textarea>
+    <button class="save-btn" onclick="saveGlobal()" style="margin-bottom:4px"><i class="ti ti-device-floppy" style="margin-right:4px"></i>メモを保存</button>
+    <div class="div"></div>
+
+    <div class="f-sec"><i class="ti ti-device-floppy" style="color:#1D9E75"></i>設定を保存
+      <span class="saved-badge" id="saved-badge"><i class="ti ti-circle-check" style="font-size:11px"></i>保存済み</span>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:8px;line-height:1.6">担当者リスト・全日付のスケジュールをこのデバイスに保存します。次回起動時に自動復元されます。</div>
+    <button class="save-settings-btn" onclick="saveSettings()">
+      <i class="ti ti-device-floppy" style="font-size:18px"></i>設定を保存する
+    </button>
+    <button class="save-btn" onclick="clearSettings()" style="margin-top:6px;color:#A32D2D;border-color:#F09595">
+      <i class="ti ti-trash" style="font-size:13px;margin-right:4px"></i>保存データを削除
+    </button>
+  </div>
+</div>
+
+<!-- 共有タブ -->
+<div class="pane" id="pane-share">
+  <div class="share-box">
+    <div class="share-title"><i class="ti ti-brand-line" style="font-size:16px;color:#06C755"></i>LINEでスケジュールを送る</div>
+    <div class="share-note">現在表示中の日付のスケジュールをコピーします。</div>
+    <button class="share-big-btn" style="background:#06C755" onclick="copyForLine()">
+      <i class="ti ti-copy" style="font-size:20px"></i>LINEに貼り付ける内容をコピー
+    </button>
+    <div id="line-copy-area"></div>
+  </div>
+  <div class="share-box">
+    <div class="share-title"><i class="ti ti-share" style="font-size:16px;color:#1D9E75"></i>スケジュールを共有する</div>
+    <div class="share-note">現在表示中の日付のスケジュールを共有します。</div>
+    <button class="share-big-btn" onclick="pushShared()">
+      <i class="ti ti-cloud-upload" style="font-size:20px"></i>共有する（ワンタップ）
+    </button>
+    <div id="share-code-area"></div>
+  </div>
+  <div class="share-box">
+    <div class="share-title"><i class="ti ti-cloud-download" style="font-size:16px;color:#854F0B"></i>共有データを受信する</div>
+    <div class="share-note">共有コードを入力してください。</div>
+    <div class="row-inp" style="margin-bottom:0">
+      <input id="inp-pull-code" placeholder="共有コード（例: RS-2506）" style="flex:1;font-size:14px;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);letter-spacing:.1em">
+      <button class="ab" style="background:#854F0B;color:#fff;padding:8px 14px" onclick="pullByCode()"><i class="ti ti-download" style="margin-right:3px"></i>受信</button>
+    </div>
+  </div>
+</div>
+
+<!-- まとめタブ -->
+<div class="pane" id="pane-summary">
+  <div class="stat-grid" id="stat-grid"></div>
+  <div id="sum-note" style="padding:0 1rem 8px"></div>
+  <div style="font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;padding:4px 1rem 5px">本日のスケジュール</div>
+  <div id="sum-list" style="padding:0 1rem 1rem"></div>
+</div>
+</div>
+
+<script>
+const WN=['日','月','火','水','木','金','土'];
+const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fmtDisp=ds=>{const d=new Date(ds+'T00:00:00');return`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WN[d.getDay()]}）`;};
+const today=new Date();
+const SAVE_KEY='sougei:local:v2';
+
+let ROSTER=[
+  {name:'堀内 銀仁',school:'マルバーンカレッジ東京',grade:'3年生'},
+  {name:'堀内 結月',school:'マルバーンカレッジ東京',grade:'1年生'},
+  {name:'橋本 琉生',school:'小平第二小学校',grade:'1年生'},
+  {name:'三浦 圭人',school:'小平第二小学校',grade:'2年生'},
+  {name:'廣瀬 思温',school:'小平第二小学校',grade:'3年生'},
+  {name:'木村 英慈',school:'小平第二小学校',grade:'4年生'},
+  {name:'佐野 瑞',school:'小平第二小学校',grade:'4年生'},
+  {name:'木村 侑生',school:'小平第二小学校',grade:'6年生'},
+  {name:'佐野 輝',school:'小平第二小学校',grade:'6年生'},
+  {name:'金子 陸麿',school:'小平第三小学校',grade:'2年生'},
+  {name:'金子 和麿',school:'小平第三小学校',grade:'4年生'},
+  {name:'宇都木 春輝',school:'小平第四小学校',grade:'1年生'},
+  {name:'佐藤 里依沙',school:'小平第四小学校',grade:'1年生'},
+  {name:'柳 海舟',school:'小平第四小学校',grade:'2年生'},
+  {name:'宍戸 陽葵',school:'小平第四小学校',grade:'2年生'},
+  {name:'池田 朱里',school:'小平第四小学校',grade:'2年生'},
+  {name:'カイ 百華',school:'小平第四小学校',grade:'4年生'},
+  {name:'池田 咲良',school:'小平第四小学校',grade:'4年生'},
+  {name:'岡田 美織',school:'小平第四小学校',grade:'4年生'},
+  {name:'脇 緋菜乃',school:'小平第四小学校',grade:'4年生'},
+  {name:'陣内 直人',school:'小平第四小学校',grade:'6年生'},
+  {name:'佐伯 羽児馬',school:'小平第六小学校',grade:'6年生'},
+  {name:'増田 百桜',school:'小平第八小学校',grade:'1年生'},
+  {name:'田中 篤人',school:'小平第九小学校',grade:'3年生'},
+  {name:'大橋 惟人',school:'小平第十小学校',grade:'2年生'},
+  {name:'大和田 和花',school:'小平第十小学校',grade:'4年生'},
+  {name:'東條 莉子',school:'小平第十小学校',grade:'4年生'},
+  {name:'平田 樹',school:'小平第十小学校',grade:'5年生'},
+  {name:'大橋 湊人',school:'小平第十小学校',grade:'4年生'},
+  {name:'野田 華帆',school:'小平第十四小学校',grade:'1年生'},
+  {name:'白石 寛大',school:'小平第十五小学校',grade:'2年生'},
+  {name:'長谷川 明茉',school:'小平第十五小学校',grade:'2年生'},
+  {name:'北原 詠士郎',school:'小平第十五小学校',grade:'2年生'},
+  {name:'小美野 瑛介',school:'小平第十五小学校',grade:'3年生'},
+  {name:'髙橋 彩月',school:'鈴木小学校',grade:'3年生'},
+  {name:'池澤 蒼介',school:'鈴木小学校',grade:'2年生'},
+  {name:'中山 詩恩',school:'武蔵野東小学校',grade:'5年生'},
+  {name:'笹島 夕凜',school:'都立立川国際附属',grade:'3年生'},
+];
+
+// S.days = { "2026-06-08": { rides:[], globalNote:'', nextId:1 }, ... }
+// 担当者リストは全日付共通
+let S={
+  currentDate: fmt(today),
+  drivers: ['田中','山田','佐藤','鈴木','高橋'],
+  customChildren: [],
+  selectedChildren: [],
+  days: {},        // 日付ごとのデータ
+  shareCode: '',
+};
+
+// 指定日のデータを取得（なければ初期化して返す）
+function dayData(date){
+  if(!date)date=S.currentDate;
+  if(!S.days[date])S.days[date]={rides:[],globalNote:'',nextId:1};
+  return S.days[date];
+}
+function currentDay(){return dayData(S.currentDate);}
+function sortedRides(date){return[...dayData(date).rides].sort((a,b)=>a.time.localeCompare(b.time));}
+
+function allChildren(){return[...new Set([...ROSTER.map(r=>r.name),...S.customChildren])];}
+
+function toast(msg,ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=ok?'#27500A':'#791F1F';t.style.color=ok?'#EAF3DE':'#FCEBEB';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ── 日付操作 ── */
+function toggleDatePicker(){
+  const panel=document.getElementById('date-picker-panel');
+  const inp=document.getElementById('banner-date-inp');
+  const isOpen=panel.classList.contains('open');
+  if(isOpen){panel.classList.remove('open');}
+  else{inp.value=S.currentDate;panel.classList.add('open');setTimeout(()=>inp.focus(),80);}
+}
+function closeDatePicker(){document.getElementById('date-picker-panel').classList.remove('open');}
+function applyDateFromPicker(){
+  const v=document.getElementById('banner-date-inp').value;
+  if(v){S.currentDate=v;renderSchedule();}
+}
+function shiftDate(delta){
+  const d=new Date(S.currentDate+'T00:00:00');
+  d.setDate(d.getDate()+delta);
+  S.currentDate=fmt(d);
+  renderSchedule();
+  closeDatePicker();
+}
+
+/* ── 保存・復元 ── */
+async function saveSettings(){
+  const payload={currentDate:S.currentDate,drivers:S.drivers,customChildren:S.customChildren,days:S.days,savedAt:new Date().toLocaleString('ja-JP')};
+  try{
+    await window.storage.set(SAVE_KEY,JSON.stringify(payload));
+    toast('設定を保存しました');
+    const badge=document.getElementById('saved-badge');
+    if(badge){badge.classList.add('show');setTimeout(()=>badge.classList.remove('show'),3000);}
+  }catch(e){toast('保存に失敗しました',false);}
+}
+async function loadSettings(){
+  try{
+    const res=await window.storage.get(SAVE_KEY);
+    if(!res||!res.value)return;
+    const d=JSON.parse(res.value);
+    if(d.currentDate)S.currentDate=d.currentDate;
+    if(d.drivers&&d.drivers.length)S.drivers=d.drivers;
+    if(d.customChildren)S.customChildren=d.customChildren;
+    if(d.days)S.days=d.days;
+    document.getElementById('sync-txt').textContent=`復元済み ${d.savedAt||''}`;
+    toast('保存データを復元しました');
+  }catch(e){}
+}
+async function clearSettings(){
+  if(!confirm('保存データを削除しますか？'))return;
+  try{await window.storage.delete(SAVE_KEY);toast('削除しました');}
+  catch(e){toast('削除に失敗しました',false);}
+}
+
+/* ── タブ切り替え ── */
+function switchTab(t){
+  const tabs=['schedule','add','share','summary'];
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',tabs[i]===t));
+  document.querySelectorAll('.pane').forEach(el=>el.classList.remove('active'));
+  document.getElementById('pane-'+t).classList.add('active');
+  if(t==='add')renderAddForm();
+  if(t==='share')renderSharePane();
+  if(t==='summary')renderSummary();
+}
+
+/* ── 予定ページ描画 ── */
+function renderHeader(){
+  const d=new Date(S.currentDate+'T00:00:00');
+  document.getElementById('date-badge').textContent=`${d.getMonth()+1}月${d.getDate()}日（${WN[d.getDay()]}）`;
+  document.getElementById('sub-txt').textContent=`${currentDay().rides.length}名`;
+}
+function renderSchedule(){
+  renderHeader();
+  const day=currentDay();
+  document.getElementById('banner-date').textContent=fmtDisp(S.currentDate);
+  document.getElementById('banner-count').textContent=`${day.rides.length}名`;
+  const rides=sortedRides(S.currentDate);
+  const chk=rides.filter(r=>r.checked).length,tot=rides.length;
+  document.getElementById('prog-txt').textContent=`${chk} / ${tot}`;
+  document.getElementById('prog-fill').style.width=tot?`${Math.round(chk/tot*100)}%`:'0%';
+  let h='';
+  if(!tot){
+    h=`<div style="padding:2.5rem 1rem;text-align:center;color:var(--color-text-tertiary);font-size:13px"><i class="ti ti-calendar-off" style="font-size:36px;display:block;margin:0 auto 10px"></i>この日のスケジュールがありません</div>`;
+  }else{
+    const groups={};S.drivers.forEach(d=>{groups[d]=[];});groups['__none__']=[];
+    rides.forEach(r=>{const k=r.rideDriver&&S.drivers.includes(r.rideDriver)?r.rideDriver:'__none__';groups[k].push(r);});
+    [...S.drivers,'__none__'].forEach(drv=>{
+      const rs=groups[drv];if(!rs||!rs.length)return;
+      const isNone=drv==='__none__';
+      h+=`<div class="drv-section"><div class="drv-section-hdr${isNone?' unassigned':''}"><i class="ti ti-steering-wheel" style="font-size:13px"></i><span class="drv-badge${isNone?' unassigned':''}">${isNone?'担当未設定':drv}</span><span style="font-size:11px;font-weight:400;color:var(--color-text-tertiary);margin-left:2px">${rs.length}名</span></div>`;
+      rs.forEach(r=>{h+=rideH(r);});
+      h+='</div>';
+    });
+  }
+  if(day.globalNote)h+=`<div style="margin:8px 1rem 12px;padding:10px 12px;background:#FAEEDA;border-radius:var(--border-radius-md);font-size:13px;color:#633806;border:0.5px solid #FAC775"><i class="ti ti-notes" style="margin-right:6px;vertical-align:-2px"></i>${day.globalNote}</div>`;
+  document.getElementById('schedule-list').innerHTML=h;
+
+  // 追加・編集タブが開いていれば同期
+  if(document.getElementById('pane-add').classList.contains('active'))renderAddForm();
+}
+
+function drvOptions(selected){
+  return`<option value="">担当未設定</option>`+S.drivers.map(d=>`<option value="${d}"${selected===d?' selected':''}>${d}</option>`).join('');
+}
+function rideH(r){
+  const m=ROSTER.find(x=>x.name===r.name);const grade=m?m.grade:'';const isKo=r.route==='ko';
+  return`<div class="ride-card ${isKo?'ko-card':'hara-card'}${r.checked?' checked':''}">
+  <div class="ride-top">
+    <span class="time-pill ${isKo?'tp-ko':'tp-hara'}">${r.time}</span>
+    <span class="name-txt">${r.name}</span>
+    <button class="del-btn" onclick="removeRide(${r.id})"><i class="ti ti-trash"></i></button>
+  </div>
+  <div class="card-meta">
+    ${r.school?`<span class="school-tag">${r.school}</span>`:''}
+    ${grade?`<span class="grade-tag">${grade}</span>`:''}
+    <select class="card-drv-sel${r.rideDriver?'':' unset'}" onchange="setRideDriver(${r.id},this.value)">${drvOptions(r.rideDriver||'')}</select>
+  </div>
+  ${r.note?`<div><span class="note-chip"><i class="ti ti-info-circle" style="font-size:12px;margin-right:3px;vertical-align:-1px"></i>${r.note}</span></div>`:''}
+  <div class="check-row">
+    <span class="chk-lbl">${r.checked?'✓ 確認済み':'未チェック'}</span>
+    <button class="chk-btn ${r.checked?'chk-yes':'chk-no'}" onclick="toggleCheck(${r.id})">${r.checked?'済み':'チェック'}</button>
+  </div>
+</div>`;
+}
+function toggleCheck(id){
+  const r=currentDay().rides.find(x=>x.id===id);if(r)r.checked=!r.checked;renderSchedule();
+}
+function removeRide(id){
+  const day=currentDay();day.rides=day.rides.filter(x=>x.id!==id);renderSchedule();
+}
+
+/* ── 追加・編集フォーム ── */
+function renderAddForm(){
+  // 編集中の日付を表示
+  const el=document.getElementById('edit-date-display');
+  if(el)el.textContent=fmtDisp(S.currentDate);
+  const gn=document.getElementById('inp-global-note');
+  if(gn)gn.value=currentDay().globalNote||'';
+  renderDriverMgrList();filterChildChips();renderSelectedChildren();renderEditList();
+}
+function renderDriverMgrList(){
+  const el=document.getElementById('driver-mgr-list');if(!el)return;
+  if(!S.drivers.length){el.innerHTML=`<div style="font-size:12px;color:var(--color-text-tertiary);padding:4px 0">担当者が登録されていません</div>`;return;}
+  el.innerHTML=S.drivers.map(d=>`<div class="drv-mgr-row"><i class="ti ti-steering-wheel" style="font-size:14px;color:#534AB7;flex-shrink:0"></i><span class="drv-mgr-name">${d}</span><button class="drv-mgr-del" onclick="rmDrv('${d}')"><i class="ti ti-trash" style="font-size:12px"></i></button></div>`).join('');
+}
+function renderSelectedChildren(){
+  const area=document.getElementById('selected-children-area');if(!area)return;
+  area.innerHTML=S.selectedChildren.length?S.selectedChildren.map(c=>`<span class="sel-badge"><i class="ti ti-user" style="font-size:11px"></i>${c.name}<button onclick="removeSelectedChild('${c.name}')">×</button></span>`).join(''):'';
+}
+function filterChildChips(){
+  const q=(document.getElementById('child-search').value||'').toLowerCase();
+  const list=q?ROSTER.filter(r=>r.name.includes(q)||r.school.includes(q)||r.grade.includes(q)):ROSTER;
+  const extras=S.customChildren.filter(c=>!q||c.toLowerCase().includes(q));
+  const selNames=S.selectedChildren.map(c=>c.name);
+  let html='';
+  list.forEach(r=>{
+    const isSel=selNames.includes(r.name);
+    const safeN=r.name.replace(/'/g,"\\'"),safeSc=r.school.replace(/'/g,"\\'");
+    html+=`<div class="child-chip${isSel?' ac':''}"><div class="child-chip-body" ontouchstart="" onclick="toggleChildSel('${safeN}','${safeSc}')"><span class="child-chip-name">${isSel?'<i class="ti ti-check" style="font-size:10px;margin-right:2px"></i>':''}${r.name}</span><span class="child-chip-school">${r.school}・${r.grade}</span></div><button class="child-chip-del" ontouchstart="" onclick="event.stopPropagation();rmRosterChild('${safeN}')"><i class="ti ti-trash" style="font-size:14px"></i></button></div>`;
+  });
+  extras.forEach(c=>{
+    const isSel=selNames.includes(c);const safeC=c.replace(/'/g,"\\'");
+    html+=`<div class="child-chip${isSel?' ac':''}"><div class="child-chip-body" ontouchstart="" onclick="toggleChildSel('${safeC}','')"><span class="child-chip-name">${c}</span><span class="child-chip-school">その他</span></div><button class="child-chip-del" ontouchstart="" onclick="event.stopPropagation();rmCustomChild('${safeC}')"><i class="ti ti-trash" style="font-size:14px"></i></button></div>`;
+  });
+  document.getElementById('child-chips').innerHTML=html||`<div style="font-size:12px;color:var(--color-text-tertiary);padding:4px 0">該当する児童が見つかりません</div>`;
+}
+function rmRosterChild(name){
+  if(!confirm(`「${name}」を名簿から削除しますか？`))return;
+  ROSTER=ROSTER.filter(r=>r.name!==name);S.selectedChildren=S.selectedChildren.filter(c=>c.name!==name);
+  filterChildChips();renderSelectedChildren();toast(`${name} を削除しました`);
+}
+function toggleChildSel(name,school){
+  const idx=S.selectedChildren.findIndex(c=>c.name===name);
+  if(idx>=0){S.selectedChildren.splice(idx,1);}
+  else{const m=ROSTER.find(r=>r.name===name);S.selectedChildren.push({name,school:(m?m.school:school)||school});}
+  renderSelectedChildren();filterChildChips();
+}
+function removeSelectedChild(name){S.selectedChildren=S.selectedChildren.filter(c=>c.name!==name);renderSelectedChildren();filterChildChips();}
+function rmDrv(n){
+  if(!confirm(`「${n}」を削除しますか？`))return;
+  S.drivers=S.drivers.filter(d=>d!==n);
+  // 全日付のrideDriver をクリア
+  Object.values(S.days).forEach(day=>day.rides.forEach(r=>{if(r.rideDriver===n)r.rideDriver='';}));
+  renderDriverMgrList();renderSchedule();renderEditList();toast(`${n} を削除しました`);
+}
+function rmCustomChild(n){S.customChildren=S.customChildren.filter(c=>c!==n);S.selectedChildren=S.selectedChildren.filter(c=>c.name!==n);filterChildChips();renderSelectedChildren();}
+function addDriverInput(){
+  const inp=document.getElementById('inp-driver');const v=inp?inp.value.trim():'';
+  if(!v){toast('担当者名を入力してください',false);return;}
+  if(S.drivers.includes(v)){toast(`「${v}」は既に登録されています`,false);return;}
+  S.drivers.push(v);if(inp)inp.value='';
+  renderDriverMgrList();renderSchedule();renderEditList();toast(`${v} を追加しました`);
+}
+function addCustomChild(){
+  const v=document.getElementById('inp-name').value.trim();if(!v)return;
+  if(!allChildren().includes(v))S.customChildren.push(v);
+  if(!S.selectedChildren.find(c=>c.name===v))S.selectedChildren.push({name:v,school:''});
+  document.getElementById('inp-name').value='';filterChildChips();renderSelectedChildren();toast(`${v} を選択しました`);
+}
+function addRide(){
+  const time=document.getElementById('inp-time').value;
+  const note=document.getElementById('inp-note').value.trim();
+  const day=currentDay();
+  if(S.selectedChildren.length===0){
+    const nameEl=document.getElementById('inp-name');const name=nameEl?nameEl.value.trim():'';
+    if(!name||!time){toast('名前と時刻は必須です',false);return;}
+    const m=ROSTER.find(x=>x.name===name);const sc=m?m.school:'';
+    day.rides.push({id:day.nextId++,time,name,school:sc,route:sc.includes('原')?'hara':'ko',note,checked:false,rideDriver:''});
+    if(nameEl)nameEl.value='';toast(`${name} を追加しました`);
+  }else{
+    if(!time){toast('時刻は必須です',false);return;}
+    S.selectedChildren.forEach(ch=>{const sc=ch.school||'';day.rides.push({id:day.nextId++,time,name:ch.name,school:sc,route:sc.includes('原')?'hara':'ko',note,checked:false,rideDriver:''});});
+    toast(`${S.selectedChildren.length}名を追加しました`);S.selectedChildren=[];renderSelectedChildren();filterChildChips();
+  }
+  document.getElementById('inp-note').value='';renderSchedule();renderEditList();
+}
+function saveGlobal(){
+  const n=document.getElementById('inp-global-note').value;
+  currentDay().globalNote=n;renderSchedule();toast('メモを保存しました');
+}
+function renderEditList(){
+  const el=document.getElementById('edit-list');if(!el)return;
+  const rides=sortedRides(S.currentDate);
+  if(!rides.length){el.innerHTML=`<div style="font-size:12px;color:var(--color-text-tertiary);padding:6px 0">この日のスケジュールはまだありません</div>`;return;}
+  el.innerHTML=rides.map(r=>`<div class="edit-row">
+    <span style="font-size:12px;font-weight:500;padding:2px 7px;border-radius:20px;background:${r.route==='ko'?'#E6F1FB':'#EEEDFE'};color:${r.route==='ko'?'#0C447C':'#3C3489'};white-space:nowrap;flex-shrink:0">${r.time}</span>
+    <span style="flex:1;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+    <select class="ride-drv-sel${r.rideDriver?'':' unset'}" onchange="setRideDriver(${r.id},this.value)">${drvOptions(r.rideDriver||'')}</select>
+    <button style="background:#FCEBEB;border:0.5px solid #F09595;border-radius:var(--border-radius-md);padding:4px 8px;font-size:12px;color:#791F1F;cursor:pointer;flex-shrink:0;touch-action:manipulation" onclick="removeRide(${r.id})"><i class="ti ti-trash" style="font-size:12px"></i></button>
+  </div>`).join('');
+}
+function setRideDriver(id,drv){
+  const r=currentDay().rides.find(x=>x.id===id);if(!r)return;
+  r.rideDriver=drv||'';renderSchedule();
+  if(document.getElementById('pane-add').classList.contains('active'))renderEditList();
+}
+function genCode(){const d=new Date(S.currentDate+'T00:00:00');return`RS-${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;}
+function renderSharePane(){
+  const ca=document.getElementById('share-code-area');
+  ca.innerHTML=S.shareCode
+    ?`<div style="font-size:12px;color:#3B6D11;margin-bottom:8px;font-weight:500"><i class="ti ti-circle-check" style="margin-right:4px"></i>共有済み　最終更新：${S.shareCode.time}</div><div class="code-box">${S.shareCode.code}</div><button class="save-btn" onclick="copyCode('${S.shareCode.code}')"><i class="ti ti-copy" style="margin-right:4px"></i>コードをコピー</button>`
+    :`<div style="font-size:12px;color:var(--color-text-tertiary)">まだ共有されていません。</div>`;
+}
+function copyCode(code){navigator.clipboard.writeText(code).then(()=>toast('コードをコピーしました')).catch(()=>toast('コピーできませんでした',false));}
+async function pushShared(){
+  const code=genCode();
+  const day=currentDay();
+  const payload={code,rides:day.rides,date:S.currentDate,globalNote:day.globalNote,drivers:S.drivers,savedAt:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})};
+  try{
+    await window.storage.set(`sougei:${code}`,JSON.stringify(payload),true);
+    S.shareCode={code,time:payload.savedAt};
+    document.getElementById('sync-txt').textContent=`共有済み ${payload.savedAt}`;
+    toast(`共有しました　コード: ${code}`);
+    if(document.getElementById('pane-share').classList.contains('active'))renderSharePane();
+  }catch(e){toast('共有に失敗しました',false);}
+}
+async function pullShared(){await pullByCodeStr(genCode());}
+async function pullByCode(){
+  const code=document.getElementById('inp-pull-code').value.trim().toUpperCase();
+  if(!code){toast('コードを入力してください',false);return;}
+  await pullByCodeStr(code);
+}
+async function pullByCodeStr(code){
+  try{
+    const res=await window.storage.get(`sougei:${code}`,true);
+    if(!res||!res.value){toast(`${code} のデータが見つかりません`,false);return;}
+    const d=JSON.parse(res.value);
+    // 受信したデータをその日付のdayDataに上書き
+    const dateKey=d.date||S.currentDate;
+    if(!S.days[dateKey])S.days[dateKey]={rides:[],globalNote:'',nextId:1};
+    S.days[dateKey].rides=d.rides||[];
+    S.days[dateKey].globalNote=d.globalNote||'';
+    S.days[dateKey].nextId=d.rides&&d.rides.length?Math.max(...d.rides.map(r=>r.id))+1:1;
+    if(d.drivers&&d.drivers.length)S.drivers=d.drivers;
+    S.currentDate=dateKey;
+    document.getElementById('sync-txt').textContent=`受信済み ${d.savedAt||''}`;
+    toast(`受信しました　コード: ${code}`);
+    renderSchedule();
+    if(document.getElementById('pane-share').classList.contains('active'))renderSharePane();
+  }catch(e){toast('受信に失敗しました',false);}
+}
+function renderSummary(){
+  const rides=sortedRides(S.currentDate);
+  const tot=rides.length,chk=rides.filter(r=>r.checked).length;
+  const day=currentDay();
+  document.getElementById('stat-grid').innerHTML=`<div class="sc sc-amber"><div class="sc-lbl">総人数</div><div class="sc-val">${tot}名</div></div><div class="sc sc-green"><div class="sc-lbl">確認済み</div><div class="sc-val">${chk}名</div></div>`;
+  document.getElementById('sum-note').innerHTML=day.globalNote?`<div style="padding:10px 12px;background:#FAEEDA;border-radius:var(--border-radius-md);font-size:13px;color:#633806;border:0.5px solid #FAC775"><i class="ti ti-notes" style="margin-right:5px;vertical-align:-2px"></i>${day.globalNote}</div>`:'';
+  document.getElementById('sum-list').innerHTML=rides.map(r=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px"><span style="font-size:12px;font-weight:500;padding:2px 8px;border-radius:20px;background:${r.route==='ko'?'#E6F1FB':'#EEEDFE'};color:${r.route==='ko'?'#0C447C':'#3C3489'};white-space:nowrap">${r.time}</span><span style="flex:1;font-weight:500">${r.name}</span><span class="school-tag" style="font-size:10px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.school||'―'}</span>${r.checked?'<i class="ti ti-circle-check" style="font-size:16px;color:#1D9E75;flex-shrink:0"></i>':'<i class="ti ti-circle" style="font-size:16px;color:var(--color-text-tertiary);flex-shrink:0"></i>'}</div>`).join('')||`<div style="padding:1.5rem 0;text-align:center;color:var(--color-text-tertiary);font-size:13px">スケジュールがまだありません</div>`;
+}
+function copyForLine(){
+  const d=new Date(S.currentDate+'T00:00:00');
+  const dateStr=`${d.getMonth()+1}月${d.getDate()}日（${WN[d.getDay()]}）`;
+  const rides=sortedRides(S.currentDate);
+  const day=currentDay();
+  let txt=`🚌 送迎スケジュール　${dateStr}\n━━━━━━━━━━\n`;
+  if(!rides.length){txt+='スケジュールなし\n';}
+  else{
+    const groups={};S.drivers.forEach(drv=>{groups[drv]=[];});groups['__none__']=[];
+    rides.forEach(r=>{const k=r.rideDriver&&S.drivers.includes(r.rideDriver)?r.rideDriver:'__none__';groups[k].push(r);});
+    [...S.drivers,'__none__'].forEach(drv=>{
+      const rs=groups[drv];if(!rs||!rs.length)return;
+      txt+=drv==='__none__'?`\n【担当未設定】\n`:`\n【${drv}】\n`;
+      rs.forEach(r=>{txt+=`🕐 ${r.time}　${r.name}`;if(r.school)txt+=`（${r.school}）`;if(r.note)txt+=`\n　📝${r.note}`;txt+='\n';});
+    });
+  }
+  txt+=`━━━━━━━━━━\n合計 ${rides.length}名`;
+  if(day.globalNote)txt+=`\n📢 ${day.globalNote}`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    toast('コピーしました！');
+    const area=document.getElementById('line-copy-area');
+    if(area)area.innerHTML=`<div style="margin-top:10px;background:var(--color-background-primary);border:0.5px solid #06C755;border-radius:var(--border-radius-md);padding:10px 12px"><div style="font-size:11px;color:#06C755;font-weight:500;margin-bottom:6px"><i class="ti ti-circle-check" style="margin-right:4px"></i>コピー完了！</div><pre style="font-size:12px;color:var(--color-text-primary);white-space:pre-wrap;line-height:1.7">${txt}</pre></div>`;
+  }).catch(()=>{
+    const area=document.getElementById('line-copy-area');
+    if(area)area.innerHTML=`<div style="margin-top:10px"><textarea style="width:100%;font-size:12px;padding:8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);height:200px;resize:none" readonly onclick="this.select()">${txt}</textarea></div>`;
+  });
+}
+
+(async()=>{await loadSettings();renderSchedule();})();
+</script>
+</body>
+</html>
